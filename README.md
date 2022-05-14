@@ -82,13 +82,17 @@ _For more examples, read the  *flask_example.py files_
    - When is **None** the check is avoided.
    - When is [] the check is avoided
    - When contains one o more IPs, the block behavior turn on.
-
+* ALLOWED_IP_LIST:
+   - When is **None** the check is avoided.
+   - When is [] the check is avoided
+   - When contains one o more IPs, the system only grant access to the IP list.
 
 <!-- ROADMAP -->
 ## Roadmap
 
 - [x] SQLInjection detector and IP Blocking : it's allow to detect hackers and block the IP where the connection was made, currently use a list on memory and a CSV, it's allow to check the blocked IPs on Excel or Calc.
 - [X] Block IP: It's allow to block an IP on the system or just an endpoint.
+- [X] Allow IP: It's allow to only grant access to a global IP list, or just an endpoint.
 - [ ] Block Country: It's allow to ban an entire country on the system, or just an endpoint.
 - [X] LocalHostOnly: An decorator that allow to create localhost endpoints, useful to interconnect microservices created on different programming languages.
 - [ ] Scale Support

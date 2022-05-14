@@ -13,7 +13,8 @@ class FlaskSecurityUtils(object):
     def __init__(self, app=None, 
                  ip_blocked_file="ip_blocked.csv", 
                  sql_injection_check = True,
-                 blocked_ip_list = None):
+                 blocked_ip_list = None,
+                 allowed_ip_list = None):
         """
         Class init
         """
@@ -21,6 +22,7 @@ class FlaskSecurityUtils(object):
         self.__sqlInjectionCheck = sql_injection_check
         self.__ipBlockedFile = ip_blocked_file
         self.__blockedIpList = blocked_ip_list
+        self.__allowedIpList = allowed_ip_list
         if app is not None:
             self.__init_app(app)
             
@@ -31,6 +33,7 @@ class FlaskSecurityUtils(object):
         self.__ipBlockedFile = self.__app.config.get("IP_BLOCKED_CSV_FILE", self.__ipBlockedFile)
         self.__sqlInjectionCheck = self.__app.config.get("SQL_INJECTION_CHECK", self.__sqlInjectionCheck)
         self.__blockedIpList = self.__app.config.get("BLOCKED_IP_LIST", self.__blockedIpList)
+        self.__allowedIpList = self.__app.config.get("ALLOWED_IP_LIST", self.__allowedIpList)
 
     def __init_app(self, app):
         self.__getExtensionConfiguration()
@@ -42,6 +45,9 @@ class FlaskSecurityUtils(object):
             
         if self.__blockedIpList not in [None,[]]:
             self.__app.before_request(self.__beforeRequestBlockIPList)
+            
+        if self.__allowedIpList not in [None,[]]:
+            self.__app.before_request(self.__beforeAllowIPList)
         
         #Register the after function
         self.__app.teardown_appcontext(self.__afterRequest) 
@@ -62,6 +68,23 @@ class FlaskSecurityUtils(object):
             
             if ip in self.__blockedIpList and exclude == False:
                 traza.critical("The IP[{}] trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
+                abort(403)
+    
+    def __beforeAllowIPList(self,*args, **kwargs):
+        """
+        This function check if the request IP IS NOT on the allowed list 
+        and reject the connection with a 403 Forbidden error.
+        """
+
+        # If is not a 404
+        if request.endpoint in self.__app.view_functions:
+
+            ip = request.remote_addr
+            view_func = self.__app.view_functions[request.endpoint]
+            exclude = False if not hasattr(view_func, '_ignore_allowed_ip_list') else True
+            
+            if ip not in self.__allowedIpList and exclude == False:
+                traza.critical("The IP[{}] trying to access the {} is not on the IP allowed list.".format(ip,request.endpoint))
                 abort(403)
                 
         
@@ -137,6 +160,13 @@ class FlaskSecurityUtils(object):
         func._exclude_ip_block = True
         return func
     
+    def ignore_allowed_ip_list(self,func):
+        """
+        This decorator is used to allow all IPs to reach the endpoint, avoiding the allowed IP list.
+        """
+        func._ignore_allowed_ip_list = True
+        return func
+    
     def block_ip_list(self,ipList):
         
         """
@@ -157,13 +187,41 @@ class FlaskSecurityUtils(object):
                         
                         ip = request.remote_addr
                         if ip in ipList:
-                            traza.critical("The IP[{}] trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
+                            traza.critical("The IP[{}] is trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
                             abort(403)
                 
                 return function(*args, **kwargs)
             return wrapper
         
         return wrapper_block_ip_list
+    
+    def grant_access_ip_list(self,ipList):
+        
+        """
+        Grant access only to all IPs on the ipList[str]
+        
+        """
+
+        def wrapper_grant_access_ip_list(function):
+            
+            @wraps(function)
+            def wrapper(*args, **kwargs):
+                
+                #If the request exists
+                if has_request_context() == True:
+                    
+                    # If is not a 404
+                    if request.endpoint in self.__app.view_functions:
+                        
+                        ip = request.remote_addr
+                        if ip not in ipList:
+                            traza.critical("The IP[{}] is trying to access the {} is not into the grant_access_ip_list{}.".format(ip,request.endpoint, ipList))
+                            abort(403)
+                
+                return function(*args, **kwargs)
+            return wrapper
+        
+        return wrapper_grant_access_ip_list
     
     def localhost_only(self, fn):
         
@@ -181,7 +239,7 @@ class FlaskSecurityUtils(object):
                     
                     ip = request.remote_addr
                     if ip not in ['localhost','127.0.0.1']:
-                        traza.critical("The IP[{}] trying to access the localhost_only {} function.".format(ip,request.endpoint))
+                        traza.critical("The IP[{}] is trying to access the localhost_only {} function.".format(ip,request.endpoint))
                         abort(403)
                 
             return fn(*args, **kwargs)
