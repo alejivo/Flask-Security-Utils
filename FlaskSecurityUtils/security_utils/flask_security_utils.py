@@ -40,7 +40,7 @@ class FlaskSecurityUtils(object):
         if self.__sqlInjectionCheck == True:
             self.__app.before_request(self.__beforeRequestInjectionCheck) 
             
-        if self.__blockedIpList in [None,[]]:
+        if self.__blockedIpList not in [None,[]]:
             self.__app.before_request(self.__beforeRequestBlockIPList)
         
         #Register the after function
