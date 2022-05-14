@@ -58,9 +58,10 @@ class FlaskSecurityUtils(object):
 
             ip = request.remote_addr
             view_func = self.__app.view_functions[request.endpoint]
-            exclude = True if not hasattr(view_func, '_exclude_ip_block') else False
+            exclude = False if not hasattr(view_func, '_exclude_ip_block') else True
             
             if ip in self.__blockedIpList and exclude == False:
+                traza.critical("The IP[{}] trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
                 abort(403)
                 
         
