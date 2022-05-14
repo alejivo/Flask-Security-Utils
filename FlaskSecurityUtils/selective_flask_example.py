@@ -18,7 +18,7 @@ def no_test():
 @app.route('/test-injection', methods=['GET','POST'])
 @fsu.sql_injection_check
 def block():
-    return "Hi, i'm checked on demand"
+    return "Hi, i'm checked for SQLInjections on demand"
 
 # Test with an attact on var ej '+OR+1=1--
 @app.route('/<var>/check', methods=['GET','POST'])
@@ -44,8 +44,14 @@ def test_single(var: str):
 # With this decorator the ip is blocked on this endpoint
 @app.route('/blocked-by-ip', methods=['GET','POST'])
 @fsu.block_ip_list(ipList=['127.0.0.1'])
-def hello2():
+def blocked_by_ip():
     return "Hi, i'm blocked on localhost!"
 
+# With this decorator, only localhost can access to this endpoint
+@app.route('/localhost-only-endpoint', methods=['GET','POST'])
+@fsu.localhost_only
+def localhost_only_endpoint():
+    return "Hi, i'm a localhost only endpoint!"
+
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port=8080)

@@ -139,11 +139,11 @@ class FlaskSecurityUtils(object):
     def block_ip_list(self,ipList):
         
         """
-        Check the request for sql injections
+        Restrict access to all IPs on the ipList[str]
         
         """
 
-        def wrapper_injection_check(function):
+        def wrapper_block_ip_list(function):
             
             @wraps(function)
             def wrapper(*args, **kwargs):
@@ -162,7 +162,32 @@ class FlaskSecurityUtils(object):
                 return function(*args, **kwargs)
             return wrapper
         
-        return wrapper_injection_check
+        return wrapper_block_ip_list
     
+    def localhost_only(self, fn):
+        
+        """
+        Rejects access to any non localhost IP 
+        
+        """
+        def wrapper_localhost_only(*args, **kwargs):
+            
+            #If the request exists
+            if has_request_context() == True:
+                
+                # If is not a 404
+                if request.endpoint in self.__app.view_functions:
+                    
+                    ip = request.remote_addr
+                    if ip not in ['localhost','127.0.0.1']:
+                        traza.critical("The IP[{}] trying to access the localhost_only {} function.".format(ip,request.endpoint))
+                        abort(403)
+                
+            return fn(*args, **kwargs)
+
+        
+        wrapper_localhost_only.__name__ = fn.__name__
+        return wrapper_localhost_only
+
     
     

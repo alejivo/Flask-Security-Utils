@@ -90,7 +90,7 @@ _For more examples, read the  *flask_example.py files_
 - [x] SQLInjection detector and IP Blocking : it's allow to detect hackers and block the IP where the connection was made, currently use a list on memory and a CSV, it's allow to check the blocked IPs on Excel or Calc.
 - [X] Block IP: It's allow to block an IP on the system or just an endpoint.
 - [ ] Block Country: It's allow to ban an entire country on the system, or just an endpoint.
-- [ ] LocalHostOnly: An decorator that allow to create localhost endpoints, useful to interconnect microservices created on different programming languages.
+- [X] LocalHostOnly: An decorator that allow to create localhost endpoints, useful to interconnect microservices created on different programming languages.
 - [ ] Scale Support
     - [ ] Redis IP storage: To share the blocked list across multiple Flask instances.
 
