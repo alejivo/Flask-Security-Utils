@@ -72,13 +72,23 @@ if __name__ == "__main__":
 
 _For more examples, read the  *flask_example.py files_
 
+### Configuration
+
+* IP_BLOCKED_CSV_FILE: must be the complete file where the block list is saved, only used for persistence in reboots.
+* SQL_INJECTION_CHECK:
+   - When is **True** check for injection runs for the whole site.
+   - When is **False** the scan is skipped.
+* BLOCKED_IP_LIST: 
+   - When is **None** the check is avoided.
+   - When is [] the check is avoided
+   - When contains one o more IPs, the block behavior turn on.
 
 
 <!-- ROADMAP -->
 ## Roadmap
 
 - [x] SQLInjection detector and IP Blocking : it's allow to detect hackers and block the IP where the connection was made, currently use a list on memory and a CSV, it's allow to check the blocked IPs on Excel or Calc.
-- [ ] Block IP: It's allow to block an IP on the system or just an endpoint.
+- [X] Block IP: It's allow to block an IP on the system or just an endpoint.
 - [ ] Block Country: It's allow to ban an entire country on the system, or just an endpoint.
 - [ ] LocalHostOnly: An decorator that allow to create localhost endpoints, useful to interconnect microservices created on different programming languages.
 - [ ] Scale Support
@@ -106,6 +116,7 @@ Don't forget to give the project a star! Thanks again!
 ## Implementation Details
 
 Some implementations detail highly important to understand the library behavior. 
+
 
 ### Default regular expressions of SQLInjection
 

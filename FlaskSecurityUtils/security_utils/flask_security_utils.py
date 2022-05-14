@@ -1,20 +1,26 @@
 try:
     from flask import request, abort, has_request_context
+    from functools import wraps
+    import logging
     from security_utils.SQLInjection import SQLInjection
 except ImportError as ex:
     print("Missing flask dependency")
+    
+traza = logging.getLogger(__name__)
 
 class FlaskSecurityUtils(object):
     
     def __init__(self, app=None, 
                  ip_blocked_file="ip_blocked.csv", 
-                 sql_injection_check = True):
+                 sql_injection_check = True,
+                 blocked_ip_list = None):
         """
         Class init
         """
         self.__app = app
-        self.__sql_injection_check = sql_injection_check
-        self.__ip_blocked_file = ip_blocked_file
+        self.__sqlInjectionCheck = sql_injection_check
+        self.__ipBlockedFile = ip_blocked_file
+        self.__blockedIpList = blocked_ip_list
         if app is not None:
             self.__init_app(app)
             
@@ -22,19 +28,47 @@ class FlaskSecurityUtils(object):
         """
         This internal function is used to configure the extension
         """
-        self.__ip_blocked_file = self.__app.config.get("IP_BLOCKED_CSV_FILE", self.__ip_blocked_file)
-        self.__sql_injection_check = self.__app.config.get("SQL_INJECTION_CHECK", self.__sql_injection_check)
+        self.__ipBlockedFile = self.__app.config.get("IP_BLOCKED_CSV_FILE", self.__ipBlockedFile)
+        self.__sqlInjectionCheck = self.__app.config.get("SQL_INJECTION_CHECK", self.__sqlInjectionCheck)
+        self.__blockedIpList = self.__app.config.get("BLOCKED_IP_LIST", self.__blockedIpList)
 
     def __init_app(self, app):
         self.__getExtensionConfiguration()
-        self.__clsSQLInjection = SQLInjection(ip_blocked_file = self.__ip_blocked_file)
-        self.__app.before_request(self.before_request_func) #Register the before function
-        self.__app.teardown_appcontext(self.after_request) #Register the after function
+        self.__clsSQLInjection = SQLInjection(ip_blocked_file = self.__ipBlockedFile)
+        
+        #Register the before functions
+        if self.__sqlInjectionCheck == True:
+            self.__app.before_request(self.__beforeRequestInjectionCheck) 
+            
+        if self.__blockedIpList in [None,[]]:
+            self.__app.before_request(self.__beforeRequestBlockIPList)
+        
+        #Register the after function
+        self.__app.teardown_appcontext(self.__afterRequest) 
+        
 
-    def before_request_func(self,*args, **kwargs):
+    def __beforeRequestBlockIPList(self,*args, **kwargs):
+        """
+        This function check if the request IP is on the blocked list 
+        and reject the connection with a 403 Forbidden error.
+        """
+
+        # If is not a 404
+        if request.endpoint in self.__app.view_functions:
+
+            ip = request.remote_addr
+            view_func = self.__app.view_functions[request.endpoint]
+            exclude = True if not hasattr(view_func, '_exclude_ip_block') else False
+            
+            if ip in self.__blockedIpList and exclude == False:
+                abort(403)
+                
+        
+    def __beforeRequestInjectionCheck(self,*args, **kwargs):
         """
         This function looks for injections before any request and blocks
         injections and banned ips.
+        All blocked IPs will launch a 403 Forbidden error.
         """
 
         # If is not a 404
@@ -42,17 +76,17 @@ class FlaskSecurityUtils(object):
             
             view_func = self.__app.view_functions[request.endpoint]
             run_check = True if not hasattr(view_func, '_exclude_sql_injection_check') else False
-            run_check = False if self.__sql_injection_check == False else run_check
+            run_check = False if self.__sqlInjectionCheck == False else run_check
             
             if run_check == True:
                 
                 data = request.form.to_dict()
                 ip = request.remote_addr
                 res = self.__clsSQLInjection.detectSQLInjection(data,ip)
-                if res == True: abort(404) #If the IP is blocked or an injection was detected
+                if res == True: abort(403) #If the IP is blocked or an injection was detected
             
     
-    def after_request(self,exception):
+    def __afterRequest(self,exception):
         pass
     
     def getSQLInjection(self) -> SQLInjection:
@@ -80,7 +114,7 @@ class FlaskSecurityUtils(object):
                     ip = request.remote_addr
                     
                     res = self.__clsSQLInjection.detectSQLInjection(data,ip)
-                    if res == True: abort(404) #If the IP is blocked or an injection was detected
+                    if res == True: abort(403) #If the IP is blocked or an injection was detected
                 
             return fn(*args, **kwargs)
 
@@ -94,4 +128,41 @@ class FlaskSecurityUtils(object):
         """
         func._exclude_sql_injection_check = True
         return func
+    
+    def exclude_from_ip_block(self,func):
+        """
+        This decorator is used to avoid the execution of the global block IP list check.
+        """
+        func._exclude_ip_block = True
+        return func
+    
+    def block_ip_list(self,ipList):
+        
+        """
+        Check the request for sql injections
+        
+        """
+
+        def wrapper_injection_check(function):
+            
+            @wraps(function)
+            def wrapper(*args, **kwargs):
+                
+                #If the request exists
+                if has_request_context() == True:
+                    
+                    # If is not a 404
+                    if request.endpoint in self.__app.view_functions:
+                        
+                        ip = request.remote_addr
+                        if ip in ipList:
+                            traza.critical("The IP[{}] trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
+                            abort(403)
+                
+                return function(*args, **kwargs)
+            return wrapper
+        
+        return wrapper_injection_check
+    
+    
     

@@ -5,24 +5,25 @@ app = Flask(__name__)
 
 app.config["IP_BLOCKED_CSV_FILE"]="example_csv.csv"
 app.config["SQL_INJECTION_CHECK"]= True #You can avoid as it's the default value
-fs = FlaskSecurityUtils(app)
+app.config["BLOCKED_IP_LIST"]= ['127.0.0.1'] #Should be an string list, been none None or [] will disable the check for whole app.
+fsu = FlaskSecurityUtils(app)
 
 #Atack this endpoint with a field as topic=Gifts'+OR+1=1--
 @app.route('/exclude', methods=['GET','POST'])
-@fs.exclude_from_sql_injection_check
-def hello():
+@fsu.exclude_from_sql_injection_check
+def exclude():
     return "Hi, im an excluded endpoint'!"
 
 #Atack this endpoint with a field as topic=Gifts'+OR+1=1--
 @app.route('/no-exclude', methods=['GET','POST'])
-def hello2():
+def no_exclude():
     return "Hi, i'm a checked endpoint!"
 
-# @app.route('/block')
-# @fp.sql_injection_check
-# def block():
-#     print('during view')
-#     return 'Hello, World!'
+#With this decorator the ip excluded from been block
+@app.route('/ip-block-excluded')
+@fsu.exclude_from_ip_block
+def ip_block_excluded():
+    return "Hi, I'm excluded from localhost block!"
 
 if __name__ == "__main__":
     app.run()
