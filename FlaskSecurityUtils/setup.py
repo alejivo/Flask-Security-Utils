@@ -13,5 +13,5 @@ setup(
     long_description_content_type="text/markdown",
     author='Alejivo (Alejandro Javier Moyano)',
     license='BSD 3-Clause License',
-    install_requires=['Flask>=1.1.4']
+    install_requires=['Flask>=1.1.4','IP2Location>=8.7.4']
 )

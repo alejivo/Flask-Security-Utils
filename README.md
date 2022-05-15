@@ -20,10 +20,12 @@
 Flask-Security-Uils is an extension to enhance the security of flask applications blocking IP, countries and sqlinjections, it's aims to reimplement any deprecated security functionality from flask 1 to 2
 
 This library needs a flask library over 1.1.4, may work with older versions but never been tested.
+This library needs a Python 3.5 and above.
 
 ## Built With
 
 * [Flask >= 1.1.4](https://flask.palletsprojects.com/)
+* [IP2Location >= 8.7.4](https://pypi.org/project/IP2Location/)
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -143,7 +145,11 @@ https://community.broadcom.com/symantecenterprise/communities/community-home/lib
 
 Distributed under the BSD-3-Clause License. See `LICENSE.txt` for more information.
 
+### IP2Location 
 
+It's uses the IP2Location lite database who is free for personal or commercial use but attribution required by mentioning the use of this data as follows,
+
+This site or product includes IP2Location LITE data available from <a href="https://lite.ip2location.com">https://lite.ip2location.com</a>.
 
 <!-- CONTACT -->
 ## Contact
