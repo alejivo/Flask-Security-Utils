@@ -10,7 +10,7 @@ fsu = FlaskSecurityUtils(app)
 
 #Atack this endpoint with a field as topic=Gifts'+OR+1=1--
 @app.route('/exclude', methods=['GET','POST'])
-@fsu.exclude_from_sql_injection_check
+@fsu.ignore_sql_injection_check
 def exclude():
     return "Hi, im an excluded endpoint'!"
 
@@ -21,7 +21,7 @@ def no_exclude():
 
 #With this decorator the ip excluded from been block
 @app.route('/ip-block-excluded')
-@fsu.exclude_from_ip_block
+@fsu.ignore_blocked_ip_list
 def ip_block_excluded():
     return "Hi, I'm excluded from localhost block!"
 

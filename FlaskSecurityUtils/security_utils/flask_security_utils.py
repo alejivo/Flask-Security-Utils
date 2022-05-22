@@ -3,6 +3,8 @@ try:
     from functools import wraps
     import logging
     from security_utils.SQLInjection import SQLInjection
+    from security_utils.DinamicBlockedIPList import DinamicBlockedIPList
+    from security_utils.CountryFirewall import CountryFirewall
 except ImportError as ex:
     print("Missing flask dependency")
     
@@ -13,8 +15,13 @@ class FlaskSecurityUtils(object):
     def __init__(self, app=None, 
                  ip_blocked_file="ip_blocked.csv", 
                  sql_injection_check = True,
-                 blocked_ip_list = None,
-                 allowed_ip_list = None):
+                 blocked_ip_list : list = None,
+                 allowed_ip_list : list = None,
+                 ip_country_file_db : str = None,
+                 ip_v6_country_file_db : str = None,
+                 blocked_countries : list = None,
+                 allowed_countries : list = None,
+                 in_memory_database : bool = False):
         """
         Class init
         """
@@ -23,6 +30,13 @@ class FlaskSecurityUtils(object):
         self.__ipBlockedFile = ip_blocked_file
         self.__blockedIpList = blocked_ip_list
         self.__allowedIpList = allowed_ip_list
+        self.__ipCountryFileDB = ip_country_file_db
+        self.__ipV6CountryFileDB = ip_v6_country_file_db
+        self.__blockedCountries = blocked_countries
+        self.__allowedCountries = allowed_countries
+        self.__inMemoryDatabase = in_memory_database
+        
+        
         if app is not None:
             self.__init_app(app)
             
@@ -34,10 +48,28 @@ class FlaskSecurityUtils(object):
         self.__sqlInjectionCheck = self.__app.config.get("SQL_INJECTION_CHECK", self.__sqlInjectionCheck)
         self.__blockedIpList = self.__app.config.get("BLOCKED_IP_LIST", self.__blockedIpList)
         self.__allowedIpList = self.__app.config.get("ALLOWED_IP_LIST", self.__allowedIpList)
+        self.__ipCountryFileDB = self.__app.config.get("IP_COUNTRY_FILE_DB", self.__ipCountryFileDB)
+        self.__ipV6CountryFileDB = self.__app.config.get("IP_V6_COUNTRY_FILE_DB", self.__ipV6CountryFileDB)
+        self.__blockedCountries = self.__app.config.get("BLOCKED_COUNTRIES", self.__blockedCountries)
+        self.__allowedCountries = self.__app.config.get("ALLOWED_COUNTRIES", self.__allowedCountries)
+        self.__inMemoryDatabase = self.__app.config.get("IN_MEMORY_IP_DATABASE", self.__inMemoryDatabase)
 
     def __init_app(self, app):
         self.__getExtensionConfiguration()
-        self.__clsSQLInjection = SQLInjection(ip_blocked_file = self.__ipBlockedFile)
+        
+        #DinamicBlockIPList handler
+        self.__clsDinamicBlockedIPList : DinamicBlockedIPList = DinamicBlockedIPList() 
+        
+        #SQLInjection detector
+        self.__clsSQLInjection = SQLInjection(dinamicBlockedIPList = self.__clsDinamicBlockedIPList)
+        
+        #IP Country handler
+        self.__clsCountryFirewall = CountryFirewall(self.__ipCountryFileDB,
+                                                    self.__ipV6CountryFileDB,
+                                                    self.__blockedCountries,
+                                                    self.__allowedCountries,
+                                                    self.__inMemoryDatabase)
+        
         
         #Register the before functions
         if self.__sqlInjectionCheck == True:
@@ -48,6 +80,12 @@ class FlaskSecurityUtils(object):
             
         if self.__allowedIpList not in [None,[]]:
             self.__app.before_request(self.__beforeAllowIPList)
+            
+        if self.__blockedCountries not in [None, []]:
+            self.__app.before_request(self.__beforeRequestBlockedCountryIPCheck)
+            
+        if self.__allowedCountries not in [None, []]:
+            self.__app.before_request(self.__beforeRequestAllowedCountryIPCheck)
         
         #Register the after function
         self.__app.teardown_appcontext(self.__afterRequest) 
@@ -108,7 +146,42 @@ class FlaskSecurityUtils(object):
                 ip = request.remote_addr
                 res = self.__clsSQLInjection.detectSQLInjection(data,ip)
                 if res == True: abort(403) #If the IP is blocked or an injection was detected
+    
+    def __beforeRequestBlockedCountryIPCheck(self,*args, **kwargs):
+        """
+        This function check if the request IP is in a blocked country 
+        and reject the connection with a 403 Forbidden error.
+        """
+        
+        # If is not a 404
+        if request.endpoint in self.__app.view_functions:
+
+            ip = request.remote_addr
+            view_func = self.__app.view_functions[request.endpoint]
+            exclude = False if not hasattr(view_func, '_ignore_blocked_country_list') else True
+            blocked_ip = self.__clsCountryFirewall.isIPInBlockedCountry(ip)
             
+            if blocked_ip == True and exclude == False:
+                traza.critical("The IP[{}] trying to access the {} is in a blocked country.".format(ip,request.endpoint))
+                abort(403)
+    
+    def __beforeRequestAllowedCountryIPCheck(self,*args, **kwargs):
+        """
+        This function check if the request IP IS NOT in the allowed country list
+        and reject the connection with a 403 Forbidden error.
+        """
+        
+        # If is not a 404
+        if request.endpoint in self.__app.view_functions:
+
+            ip = request.remote_addr
+            view_func = self.__app.view_functions[request.endpoint]
+            exclude = False if not hasattr(view_func, '_ignore_allowed_country_list') else True
+            allowed_ip = self.__clsCountryFirewall.isIPInAllowedCountry(ip)
+            
+            if allowed_ip == False and exclude == False:
+                traza.critical("The IP[{}] trying to access the {} is not on the country IP allowed list.".format(ip,request.endpoint))
+                abort(403)
     
     def __afterRequest(self,exception):
         pass
@@ -146,18 +219,25 @@ class FlaskSecurityUtils(object):
         wrapper_injection_check.__name__ = fn.__name__
         return wrapper_injection_check
     
-    def exclude_from_sql_injection_check(self,func):
+    def ignore_sql_injection_check(self,func):
         """
         This decorator is used to avoid the execution of sql injection test.
         """
         func._exclude_sql_injection_check = True
         return func
     
-    def exclude_from_ip_block(self,func):
+    def ignore_blocked_ip_list(self,func):
         """
         This decorator is used to avoid the execution of the global block IP list check.
         """
         func._exclude_ip_block = True
+        return func
+    
+    def ignore_blocked_country_list(self,func):
+        """
+        This decorator is used to avoid the execution of the global blocked country list check.
+        """
+        func._ignore_blocked_country_list = True
         return func
     
     def ignore_allowed_ip_list(self,func):
@@ -165,6 +245,13 @@ class FlaskSecurityUtils(object):
         This decorator is used to allow all IPs to reach the endpoint, avoiding the allowed IP list.
         """
         func._ignore_allowed_ip_list = True
+        return func
+    
+    def ignore_allowed_country_list(self,func):
+        """
+        This decorator is used to avoid the execution of the global allowed country list check.
+        """
+        func._ignore_allowed_country_list = True
         return func
     
     def block_ip_list(self,ipList):
@@ -247,6 +334,62 @@ class FlaskSecurityUtils(object):
         
         wrapper_localhost_only.__name__ = fn.__name__
         return wrapper_localhost_only
+    
+    def grant_access_country_list(self,countryList):
+        
+        """
+        Grant access only to all countries on the countryList[str]
+        
+        """
+
+        def wrapper_grant_access_country_list(function):
+            
+            @wraps(function)
+            def wrapper(*args, **kwargs):
+                
+                #If the request exists
+                if has_request_context() == True:
+                    
+                    # If is not a 404
+                    if request.endpoint in self.__app.view_functions:
+                        
+                        ip = request.remote_addr
+                        if self.__clsCountryFirewall.isInList(ip,countryList) == False:
+                            traza.critical("The IP[{}] is trying to access the {} is not into the grant_access_country_list{}.".format(ip,request.endpoint, countryList))
+                            abort(403)
+                
+                return function(*args, **kwargs)
+            return wrapper
+        
+        return wrapper_grant_access_country_list
+    
+    def block_access_country_list(self,countryList):
+        
+        """
+        Block access only to all countries on the countryList[str]
+        
+        """
+
+        def wrapper_block_access_country_list(function):
+            
+            @wraps(function)
+            def wrapper(*args, **kwargs):
+                
+                #If the request exists
+                if has_request_context() == True:
+                    
+                    # If is not a 404
+                    if request.endpoint in self.__app.view_functions:
+                        
+                        ip = request.remote_addr
+                        if self.__clsCountryFirewall.isInList(ip,countryList) == True:
+                            traza.critical("The IP[{}] trying to access the {} is into the block_access_country_list{}.".format(ip,request.endpoint, countryList))
+                            abort(403)
+                
+                return function(*args, **kwargs)
+            return wrapper
+        
+        return wrapper_block_access_country_list
 
     
     

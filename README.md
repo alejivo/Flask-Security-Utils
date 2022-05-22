@@ -88,6 +88,62 @@ _For more examples, read the  *flask_example.py files_
    - When is **None** the check is avoided.
    - When is [] the check is avoided
    - When contains one o more IPs, the system only grant access to the IP list.
+* IN_MEMORY_IP_DATABASE:
+   - When is **True** the database is charged on memory.
+   - When is **False** the database is used from file. __Is the default behavior__
+* IP_COUNTRY_FILE_DB: 
+   - When is **None** the folder 'ip_database' is created and 'IP-COUNTRY.BIN' downloaded from git.
+   - When is [] the folder 'ip_database' is created and 'IP-COUNTRY.BIN' downloaded from git.
+   - When contains one o more IPs, the block behavior turn on.
+   - Download the last file version from https://lite.ip2location.com/database/ip-country
+* IP_V6_COUNTRY_FILE_DB:
+   - When is **None** the folder 'ip_database' is created and 'IPV6-COUNTRY.BIN' downloaded from git.
+   - When is [] the folder 'ip_database' is created and 'IPV6-COUNTRY.BIN' downloaded from git.
+   - When contains one o more IPs, the system only grant access to the IP list.
+   - Download the last file version from https://lite.ip2location.com/database/ip-country
+* ALLOWED_COUNTRIES: 
+   - When is **None** the check is avoided.
+   - When is [] the check is avoided
+   - When contains one o more countries, the system only grant access to an IP from the country list.
+   - Uses the ISO_3166-1_alpha-2 nomenclature, more info in https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+* BLOCKED_COUNTRIES:
+   - When is **None** the check is avoided.
+   - When is [] the check is avoided
+   - When contains one o more countries, the block behavior turn on.
+   - Uses the ISO_3166-1_alpha-2 nomenclature, more info in https://en.wikipedia.org/wiki/ISO_3166-1_alpha-2
+
+### Decorators
+
+* SQLInjection Regex Firewall:
+   - **sql_injection_check**
+   - **ignore_sql_injection_check**
+* IP Firewall:
+   - **ignore_blocked_ip_list**
+   - **ignore_allowed_ip_list**
+   - **grant_access_ip_list(ipList=[])**
+   - **block_ip_list(ipList=[])**
+   - **localhost_only**
+* Country Firewall:
+   - **ignore_blocked_country_list**: I
+   - **grant_access_country_list(countryList=[])**
+   - **block_access_country_list(countryList=[])**
+
+### Functions
+
+* SQLInjection Regex Firewall:
+   - **detectSQLInjectionVar**: Allow detecting an injection into a var:
+   ```python
+   # Test with an attact on var ex '+OR+1=1--
+   # http://127.0.0.1:5000/'+OR+1=1--/check_single
+   @app.route('/<var>/check-single', methods=['GET','POST'])
+   def test_single(var: str):
+      sqlCheck : SQLInjection = SQLInjection() #Use as singleton
+      ip = request.remote_addr
+      if sqlCheck.detectSQLInjectionVar(var,ip) == True:
+         return "Alert, injection detected"
+      else:
+         return "Hi, i'm checked on demand"
+   ```
 
 <!-- ROADMAP -->
 ## Roadmap
@@ -95,7 +151,7 @@ _For more examples, read the  *flask_example.py files_
 - [x] SQLInjection detector and IP Blocking : it's allow to detect hackers and block the IP where the connection was made, currently use a list on memory and a CSV, it's allow to check the blocked IPs on Excel or Calc.
 - [X] Block IP: It's allow to block an IP on the system or just an endpoint.
 - [X] Allow IP: It's allow to only grant access to a global IP list, or just an endpoint.
-- [ ] Block Country: It's allow to ban an entire country on the system, or just an endpoint.
+- [X] Block Country: It's allow to ban an entire country on the system, or just an endpoint.
 - [X] LocalHostOnly: An decorator that allow to create localhost endpoints, useful to interconnect microservices created on different programming languages.
 - [ ] Scale Support
     - [ ] Redis IP storage: To share the blocked list across multiple Flask instances.
