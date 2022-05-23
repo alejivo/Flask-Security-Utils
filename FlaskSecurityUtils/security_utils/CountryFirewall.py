@@ -84,26 +84,26 @@ class CountryFirewall():
     
         #Download IPV4 database if it needed
         if file_exists(cls.__ipCountryFileDB) == False:
-            urlIpV4 = "https://github.com/alejivo/Flask-Security-Utils/raw/main/IP2LocationDB/IP-COUNTRY.BIN"
+            urlIpV4 = "https://github.com/alejivo/Flask-Security-Utils/raw/main/IP2LocationDB/IP2LOCATION-LITE-DB1.BIN"
             createFolder()
-            #cls.__downloadFile(cls,url=urlIpV4,filePath=os.path.join("ip_database","IP-COUNTRY.BIN"))
-            cls.__downloadFile(cls,url=urlIpV4,filePath=os.path.join("ip_database","IP-COUNTRY.BIN"))
-            cls.__ipCountryFileDB = os.path.join("ip_database","IP-COUNTRY.BIN")
+            #cls.__downloadFile(cls,url=urlIpV4,filePath=os.path.join("ip_database","IP2LOCATION-LITE-DB1.BIN"))
+            cls.__downloadFile(cls,url=urlIpV4,filePath=os.path.join("ip_database","IP2LOCATION-LITE-DB1.BIN"))
+            cls.__ipCountryFileDB = os.path.join("ip_database","IP2LOCATION-LITE-DB1.BIN")
         
         #Download IPV6 database if it needed  
         if file_exists(cls.__ipV6CountryFileDB) == False:
-            urlIpV6 = "https://github.com/alejivo/Flask-Security-Utils/raw/main/IP2LocationDB/IPV6-COUNTRY.BIN"
+            urlIpV6 = "https://github.com/alejivo/Flask-Security-Utils/raw/main/IP2LocationDB/IP2LOCATION-LITE-DB1.IPV6.BIN"
             createFolder()
-            cls.__downloadFile(cls, url=urlIpV6, filePath=os.path.join("ip_database","IPV6-COUNTRY.BIN"))
-            cls.__ipV6CountryFileDB = os.path.join("ip_database","IPV6-COUNTRY.BIN")
+            cls.__downloadFile(cls, url=urlIpV6, filePath=os.path.join("ip_database","IP2LOCATION-LITE-DB1.IPV6.BIN"))
+            cls.__ipV6CountryFileDB = os.path.join("ip_database","IP2LOCATION-LITE-DB1.IPV6.BIN")
 
         #Load database files
         if cls.__inMemoryDatabase == True:
-            cls.__databaseIpV4 : IP2Location = IP2Location(os.path.join("ip_database", "IP-COUNTRY.BIN"), "SHARED_MEMORY")
-            cls.__databaseIpV6 : IP2Location = IP2Location(os.path.join("ip_database", "IPV6-COUNTRY.BIN"), "SHARED_MEMORY")
+            cls.__databaseIpV4 : IP2Location = IP2Location(os.path.join("ip_database", "IP2LOCATION-LITE-DB1.BIN"), "SHARED_MEMORY")
+            cls.__databaseIpV6 : IP2Location = IP2Location(os.path.join("ip_database", "IP2LOCATION-LITE-DB1.IPV6.BIN"), "SHARED_MEMORY")
         else:
-            cls.__databaseIpV4 : IP2Location = IP2Location(os.path.join("ip_database", "IP-COUNTRY.BIN"))
-            cls.__databaseIpV6 : IP2Location = IP2Location(os.path.join("ip_database", "IPV6-COUNTRY.BIN"))
+            cls.__databaseIpV4 : IP2Location = IP2Location(os.path.join("ip_database", "IP2LOCATION-LITE-DB1.BIN"))
+            cls.__databaseIpV6 : IP2Location = IP2Location(os.path.join("ip_database", "IP2LOCATION-LITE-DB1.IPV6.BIN"))
 
     
     def isIPInBlockedCountry(cls, ip : str) -> bool:

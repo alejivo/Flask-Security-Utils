@@ -32,7 +32,7 @@ def ip_block_excluded():
 #Without decorator, the system will block the default countries.
 @app.route('/system-excluded-countries-list')
 def system_excluded_countries_list():
-    return "Hi, I'm an endpoint blocked by all BLOCKED_COUNTRIES list."
+    return "Hi, I'm an endpoint blocked by all BLOCKED_COUNTRIES list. And seems your country, it's not blocked."
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080)
