@@ -355,7 +355,7 @@ class FlaskSecurityUtils(object):
                         
                         ip = request.remote_addr
                         if self.__clsCountryFirewall.isInList(ip,countryList) == False:
-                            traza.critical("The IP[{}] is trying to access the {} is not into the grant_access_country_list{}.".format(ip,request.endpoint, countryList))
+                            traza.critical("The IP[{}] is trying to access the endpoint({}) is not into the grant_access_country_list{}.".format(ip,request.endpoint, countryList))
                             abort(403)
                 
                 return function(*args, **kwargs)
@@ -383,7 +383,7 @@ class FlaskSecurityUtils(object):
                         
                         ip = request.remote_addr
                         if self.__clsCountryFirewall.isInList(ip,countryList) == True:
-                            traza.critical("The IP[{}] trying to access the {} is into the block_access_country_list{}.".format(ip,request.endpoint, countryList))
+                            traza.critical("The IP[{}] trying to access the endpoint({}) is into the block_access_country_list{}.".format(ip,request.endpoint, countryList))
                             abort(403)
                 
                 return function(*args, **kwargs)

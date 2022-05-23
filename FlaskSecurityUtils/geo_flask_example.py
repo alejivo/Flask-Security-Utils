@@ -30,7 +30,7 @@ def ip_block_excluded():
     return "Hi, I'm excluded from country block!"
 
 #Without decorator, the system will block the default countries.
-@app.route('/system-excluded-countries-list')
+@app.route('/system-default-exclude-countries-list')
 def system_excluded_countries_list():
     return "Hi, I'm an endpoint blocked by all BLOCKED_COUNTRIES list. And seems your country, it's not blocked."
 
