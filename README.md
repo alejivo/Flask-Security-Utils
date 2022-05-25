@@ -210,11 +210,13 @@ This site or product includes IP2Location LITE data available from <a href="http
 <!-- CONTACT -->
 ## Contact
 
-[@alejivo](https://twitter.com/alejivo) - contact@alejivo.com
+[@alejivo](https://twitter.com/alejivo) - email@alejivo.com
 
 [www.linkedin.com/in/alejivo](www.linkedin.com/in/alejivo)
 
 Project Link: [https://github.com/alejivo/Flask-Security-Utils](https://github.com/alejivo/Flask-Security-Utils)
+
+Project Pypi Repo Link: [https://pypi.org/project/Flask-Security-Utils/](https://pypi.org/project/Flask-Security-Utils/)
 
 
 
