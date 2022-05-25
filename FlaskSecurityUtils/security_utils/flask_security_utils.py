@@ -1,12 +1,10 @@
-try:
-    from flask import request, abort, has_request_context
-    from functools import wraps
-    import logging
-    from security_utils.SQLInjection import SQLInjection
-    from security_utils.DinamicBlockedIPList import DinamicBlockedIPList
-    from security_utils.CountryFirewall import CountryFirewall
-except ImportError as ex:
-    print("Missing flask dependency")
+from flask import request, abort, has_request_context
+from functools import wraps
+import logging
+from .SQLInjection import SQLInjection
+from .DinamicBlockedIPList import DinamicBlockedIPList
+from .CountryFirewall import CountryFirewall
+
     
 traza = logging.getLogger(__name__)
 

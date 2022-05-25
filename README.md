@@ -25,7 +25,7 @@ This library needs a Python 3.5 and above.
 ## Built With
 
 * [Flask >= 1.1.4](https://flask.palletsprojects.com/)
-* [IP2Location >= 8.7.4](https://pypi.org/project/IP2Location/)
+* [IP2Location <= 8.7.4](https://pypi.org/project/IP2Location/)
 
 <!-- GETTING STARTED -->
 ## Getting Started
