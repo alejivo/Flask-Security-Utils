@@ -4,7 +4,7 @@
   <br>
 </h1>
 
-<h4 align="center">A simple security extension for <a href="http://electron.atom.io" target="_blank">Flask</a>.</h4>
+<h4 align="center">A simple security extension for <a href="https://flask.palletsprojects.com/" target="_blank">Flask</a>.</h4>
 
 <p align="center">
   <a href="#about-the-project">About</a> •
