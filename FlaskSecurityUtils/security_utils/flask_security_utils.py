@@ -98,7 +98,7 @@ class FlaskSecurityUtils(object):
         # If is not a 404
         if request.endpoint in self.__app.view_functions:
 
-            ip = request.remote_addr
+            ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
             view_func = self.__app.view_functions[request.endpoint]
             exclude = False if not hasattr(view_func, '_exclude_ip_block') else True
             
@@ -115,7 +115,7 @@ class FlaskSecurityUtils(object):
         # If is not a 404
         if request.endpoint in self.__app.view_functions:
 
-            ip = request.remote_addr
+            ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
             view_func = self.__app.view_functions[request.endpoint]
             exclude = False if not hasattr(view_func, '_ignore_allowed_ip_list') else True
             
@@ -141,7 +141,7 @@ class FlaskSecurityUtils(object):
             if run_check == True:
                 
                 data = request.form.to_dict()
-                ip = request.remote_addr
+                ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                 res = self.__clsSQLInjection.detectSQLInjection(data,ip)
                 if res == True: abort(403) #If the IP is blocked or an injection was detected
     
@@ -154,7 +154,7 @@ class FlaskSecurityUtils(object):
         # If is not a 404
         if request.endpoint in self.__app.view_functions:
 
-            ip = request.remote_addr
+            ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
             view_func = self.__app.view_functions[request.endpoint]
             exclude = False if not hasattr(view_func, '_ignore_blocked_country_list') else True
             blocked_ip = self.__clsCountryFirewall.isIPInBlockedCountry(ip)
@@ -172,7 +172,7 @@ class FlaskSecurityUtils(object):
         # If is not a 404
         if request.endpoint in self.__app.view_functions:
 
-            ip = request.remote_addr
+            ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
             view_func = self.__app.view_functions[request.endpoint]
             exclude = False if not hasattr(view_func, '_ignore_allowed_country_list') else True
             allowed_ip = self.__clsCountryFirewall.isIPInAllowedCountry(ip)
@@ -206,7 +206,7 @@ class FlaskSecurityUtils(object):
                 if request.endpoint in self.__app.view_functions:
                     
                     data = request.form.to_dict()
-                    ip = request.remote_addr
+                    ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                     
                     res = self.__clsSQLInjection.detectSQLInjection(data,ip)
                     if res == True: abort(403) #If the IP is blocked or an injection was detected
@@ -270,7 +270,7 @@ class FlaskSecurityUtils(object):
                     # If is not a 404
                     if request.endpoint in self.__app.view_functions:
                         
-                        ip = request.remote_addr
+                        ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                         if ip in ipList:
                             traza.critical("The IP[{}] is trying to access the {} is on the block_ip_list.".format(ip,request.endpoint))
                             abort(403)
@@ -298,7 +298,7 @@ class FlaskSecurityUtils(object):
                     # If is not a 404
                     if request.endpoint in self.__app.view_functions:
                         
-                        ip = request.remote_addr
+                        ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                         if ip not in ipList:
                             traza.critical("The IP[{}] is trying to access the {} is not into the grant_access_ip_list{}.".format(ip,request.endpoint, ipList))
                             abort(403)
@@ -322,7 +322,7 @@ class FlaskSecurityUtils(object):
                 # If is not a 404
                 if request.endpoint in self.__app.view_functions:
                     
-                    ip = request.remote_addr
+                    ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                     if ip not in ['localhost','127.0.0.1']:
                         traza.critical("The IP[{}] is trying to access the localhost_only {} function.".format(ip,request.endpoint))
                         abort(403)
@@ -351,7 +351,7 @@ class FlaskSecurityUtils(object):
                     # If is not a 404
                     if request.endpoint in self.__app.view_functions:
                         
-                        ip = request.remote_addr
+                        ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                         if self.__clsCountryFirewall.isInList(ip,countryList) == False:
                             traza.critical("The IP[{}] is trying to access the endpoint({}) is not into the grant_access_country_list{}.".format(ip,request.endpoint, countryList))
                             abort(403)
@@ -379,7 +379,7 @@ class FlaskSecurityUtils(object):
                     # If is not a 404
                     if request.endpoint in self.__app.view_functions:
                         
-                        ip = request.remote_addr
+                        ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
                         if self.__clsCountryFirewall.isInList(ip,countryList) == True:
                             traza.critical("The IP[{}] trying to access the endpoint({}) is into the block_access_country_list{}.".format(ip,request.endpoint, countryList))
                             abort(403)

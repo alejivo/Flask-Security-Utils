@@ -7,7 +7,7 @@ setup(
     name='Flask-Security-Utils',
     author_email='email@alejivo.com',
     packages=find_packages(include=['security_utils']),
-    version='1.0.1',
+    version='1.0.2',
     description='Library for flask security enhancement, Geo IP blocking and retro-compatibility.',
     long_description = long_description,
     long_description_content_type="text/markdown",

@@ -138,7 +138,7 @@ _For more examples, read the  *flask_example.py files_
    @app.route('/<var>/check-single', methods=['GET','POST'])
    def test_single(var: str):
       sqlCheck : SQLInjection = SQLInjection() #Use as singleton
-      ip = request.remote_addr
+      ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
       if sqlCheck.detectSQLInjectionVar(var,ip) == True:
          return "Alert, injection detected"
       else:

@@ -25,18 +25,7 @@ def block():
 @app.route('/<var>/check', methods=['GET','POST'])
 def test_var(var: str):
     sqlCheck : SQLInjection = fsu.getSQLInjection()
-    ip = request.remote_addr
-    if sqlCheck.detectSQLInjectionVar(var,ip) == True:
-        return "Alert, injection detected"
-    else:
-        return "Hi, i'm checked on demand"
-
-# Test with an attact on var ej '+OR+1=1--
-# http://127.0.0.1:5000/'+OR+1=1--/check_single
-@app.route('/<var>/check-single', methods=['GET','POST'])
-def test_single(var: str):
-    sqlCheck : SQLInjection = SQLInjection() #Use as singleton
-    ip = request.remote_addr
+    ip = request.environ.get('HTTP_X_FORWARDED_FOR', request.remote_addr)
     if sqlCheck.detectSQLInjectionVar(var,ip) == True:
         return "Alert, injection detected"
     else:
