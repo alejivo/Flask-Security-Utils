@@ -48,7 +48,7 @@ Installation is straigthfoward
    ```sh
    pip install Flask
    ```
-3. Install Flask-Security-Utils (Not implemented yet)
+3. Install Flask-Security-Utils
    ```sh
    pip install Flask-Security-Utils 
    ```
